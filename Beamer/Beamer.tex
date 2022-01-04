@@ -1,0 +1,144 @@
+\documentclass{beamer}
+\usetheme{Madrid}
+\usepackage[heading]{ctex}
+
+%	TITLE PAGE
+\title[PSO-SA] %optional
+{基于~SA~的~PSO~算法}
+
+\subtitle{期末展示}
+
+\author[Zhe Kong] % (optional, for multiple authors)
+{孔~哲\inst{1}}
+
+\institute[IMUT] % (optional)
+{
+	\inst{1}%
+	内蒙古工业大学~电力学院
+}
+
+\date[Dec. 2020] % (optional)
+{2021年12月}
+
+\logo{\includegraphics[height=1cm]{logo.png}}
+
+%	Highlight the title of the current section
+\AtBeginSection[]
+{
+	\begin{frame}
+		\frametitle{目录}
+		\tableofcontents[currentsection]
+	\end{frame}
+}
+
+\setbeamertemplate{bibliography item}[text]
+
+\begin{document}
+	
+	% insert title page---------------------------
+	\begin{frame}
+		\titlepage % Print the title page as the first slide
+	\end{frame}
+
+	%insert contents------------------------------
+	\begin{frame}
+		\frametitle{目录}
+		\tableofcontents
+	\end{frame}
+
+	\section{引言}
+	
+	\begin{frame}
+		\frametitle{引言}
+		~~~~~~模拟退火（SA）是一种随机优化方法，广泛应用于组合优化问题。PSO-SA算法将模拟退火思想引入粒子群优化算法中，使可行解既能以较快速度收敛，又能有效避免搜索过程陷入局部最优解。\cite{b1}本展示采用Python实现PSO-SA算法，并与学习因子同步改变粒子群算法的结果进行了比较。\\~\\
+		展示目标
+		\begin{itemize}
+			\item 介绍模拟退火算法
+			\item 介绍模拟退火的粒子群算法
+			\item 使用PSO-SA算法求解简单优化问题
+		\end{itemize}
+	\end{frame}
+
+	\section{模拟退火算法思想}
+	
+	\begin{frame}
+		\frametitle{模拟退火算法思想}
+		\begin{block}{模拟退火算法}
+			~~~~~~模拟退火算法的思想来源于对固体降温过程的模拟。\cite{b2}
+		\end{block}
+		~~~~~~将固体加热至一定温度，再让其冷却。固体加热时，内能增大，其内部粒子的热运动不断增强。随着温度的不断升高，粒子运动状态趋近于无序。冷却时，粒子运动状态逐渐趋于有序，在某个温度下可以达到平衡状态，最后在常温下达到基态，同时内能也趋近于某一定值。\cite{b1,b2}
+	\end{frame}
+
+	\begin{frame}
+		\frametitle{模拟退火算法思想}
+		~~~~~~算法将内能取为目标函数值$F$，将温度取为控制参数$T$，从一给定解$X$开始，在其邻域内随机产生一个新可行解$X~'$，使用Metropolis接受准则判断，算法持续进行“产生新解——计算目标函数差$\Delta F$——判断是否接受新解——接受或舍弃”的迭代过程，对应着固体在某一恒定温度$T$下趋于热平衡的过程。\\~\\
+		~~~~~~经过多次迭代，可以求得给定控制参数$T$下最优解。然后减小控制参数$T$的值。重复执行上述迭代过程，当控制参数$T$逐渐减小并趋于零时，$X$也逐渐收敛于$X^{~*}$，对应于优化问题的整体最优解。
+	\end{frame}
+
+	\section{模拟退火算法步骤}
+	
+	\begin{frame}
+		\frametitle{模拟退火算法步骤}
+		算法步骤如下：
+		\begin{enumerate}
+			\item 初始化退火温度$T^{~k}$（$k = 0$），产生随机初始解$X^{~0}$
+			\item 进行如下迭代，得到温度$T^{~k}$下的新可行解$X^{~k}$
+			\begin{itemize}
+				\item 在$X$的领域中产生新的可行解$X~'$
+				\item 计算目标函数值$F(X~')$和目标函数$F(X)$的差值$\Delta F$
+				\item 若满足$min \{1, exp(- \Delta F / T^{~k}) \} > random [0, 1]$则接收$X~'$，否则舍弃
+			\end{itemize}
+			\item $T^{~k+1} =C \cdot T^{~k}, k = k + 1$,其中$C \in (0, 1)$\\若$X$满足收敛判据，则退火过程结束；否则，转步骤2继续迭代
+		\end{enumerate}
+		温度下降控制着迭代过程向优化方向进行，同时以概率$exp(- \Delta F / T^{~k})$接收劣质解，因此可以跳出局部极值点，只要初始温度足够高，迭代次数足够多，就能收敛到全局最优解。
+	\end{frame}
+	
+	\section{模拟退火的粒子群算法}
+	\begin{frame}
+		\begin{block}{粒子群算法}
+			~~~~~~粒子群算法将每个可能的解视为具有位置和速度的粒子。\cite{b2}
+		\end{block}
+		~~~~~~算法引入了速度这一概念，可以使目标函数加速收敛到最小值。在每次迭代中，每个粒子加速都向最佳位置趋近，每次加速都由随机数加权。\cite{b3}各粒子速度和位置更新公式如下：
+		$$x^{~(i)} = x^{~(i)} + v^{~(i)}$$
+		$$v^{~(i)} = w~v^{~(i)} + c_1 r_1 (x^{~(i)}_{best} − x^{~(i)}) + c_2 r_2 (x_{best} − x^{~(i)})$$
+	\end{frame}
+	\section{程序分析与展示}
+	
+	\begin{frame}
+		\begin{enumerate}
+			\item 初始化粒子的位置和速度
+			\item 计算种群中每个粒子的目标函数值
+			\item 更新各粒子的$x^{~(i)}_{best}$和$x_{best}$
+			\item 重复执行下列步骤
+			\begin{itemize}
+				\item 对粒子的$x^{~(i)}_{best}$进行SA搜索
+				\item 更新各粒子的$x^{~(i)}_{best}$
+				\item 进行最优选择，更新粒子群的$x_{best}$
+				\item 判断$x_{best}$是否满足算法终止条件。若是，转步骤5，否则转步骤4继续迭代
+			\end{itemize}
+			\item 输出全局最优解$x^{~*}$和目标函数值$F(x^{~*})$
+		\end{enumerate}
+	\end{frame}
+
+	\section{参考文献}
+	
+	%a reference frame
+	\begin{frame}
+		\frametitle{参考文献}
+		
+		\begin{thebibliography}{99}
+		\bibitem{b1}余胜威. MATLAB优化算法案例分析与应用[M]. 清华大学出版社, 2014.
+			
+		\bibitem{b2}Rao S S . Engineering Optimization: Theory and Practice: Fifth Edition[M]. John Wiley \& Sons, 2020.
+			
+		\bibitem{b3}Kochenderfer M J , Wheeler T A .Algorithms for Optimization[M]. The MIT Press, 2019.
+			
+		\end{thebibliography}
+	\end{frame}
+
+	% Insert a thank your frame ------------------------------------------------
+	\begin{frame}
+		\Huge{\centerline{展示结束}}
+	\end{frame}
+	
+\end{document}
